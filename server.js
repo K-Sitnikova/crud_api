@@ -1,6 +1,17 @@
 import url from 'url';
+import { v4 as uuidv4 } from 'uuid';
+
 
 const users = [];
+
+const validateUser = (data) => {
+    const requiredFields = ['username', 'age', 'hobbies']
+    return requiredFields.every((field) => data.hasOwnProperty(field) 
+    && data[field] 
+    && typeof data['username'] === "string" 
+    && typeof data['age'] === 'number' 
+    && Array.isArray(data['hobbies']))
+}
 
 export const requestHandler = (request, response) => {
     const parsedUrl = url.parse(request.url, true);
@@ -13,10 +24,11 @@ export const requestHandler = (request, response) => {
         }
         return false;
     }
-    const match = pathname.match(/^\/api\/users\/(\d+)$/)
+    const match = pathname.match(/^\/api\/users\/([A-Za-z0-9-]+)$/)
 
     if (match) {
         const id = match[1];
+        
         const user = findUser(id)
 
         switch(request.method) {
@@ -38,9 +50,14 @@ export const requestHandler = (request, response) => {
                     request.on('end', () => {
                         try {
                             const data = JSON.parse(updatedBody)
-                            Object.assign(user, data);
-                            response.writeHead(200, {'Content-Type': 'application/json'})
-                            response.end(JSON.stringify(user))
+                            if (validateUser(data)) {
+                                Object.assign(user, data);
+                                response.writeHead(200, {'Content-Type': 'application/json'})
+                                response.end(JSON.stringify(user))
+                            } else {
+                                response.writeHead(400, {'Content-Type': 'text/plain'})
+                                response.end('Missing required fields or invalid data')
+                            }
                         } catch (error) {
                             response.writeHead(400, {'Content-Type': 'text/plain'})
                             response.end('invalid JSON')
@@ -82,9 +99,17 @@ export const requestHandler = (request, response) => {
                 request.on('end', () => {
                     try {
                         const data = JSON.parse(body)
-                        users.push(data)
-                        response.writeHead(201, {'Content-Type': 'application/json'})
-                        response.end(JSON.stringify(users))
+                        if (validateUser(data)) {
+                            const curerentId = uuidv4();
+                            const newUser = {id: curerentId, ...data };
+                            users.push(newUser)
+                            response.writeHead(201, {'Content-Type': 'application/json'})
+                            response.end(JSON.stringify(users))
+                        } else {
+                            response.writeHead(400, {'Content-Type': 'text/plain'})
+                            response.end('Missing required fields')
+                        }
+                        
                     } catch (error) {
                         response.writeHead(400, {'Content-Type': 'text/plain'})
                         response.end('invalid JSON')
