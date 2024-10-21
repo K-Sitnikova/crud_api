@@ -1,0 +1,20 @@
+{
+  "name": "crud_api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start:dev": "cross-env nodemon ./src/index.js",
+    "start:prod": "npm run build && node ./dist/bundle.cjs",
+    "build": "webpack"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7",
+    "webpack": "^5.95.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "uuid": "^10.0.0"
+  }
+}
